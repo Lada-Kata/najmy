@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evidence bytů</title>
+<style>
+:root{
+  --bg:#f4f1ea; --card:#fffdf8; --ink:#1f2a2e; --muted:#6b7478; --line:#e3ddd0;
+  --accent:#2f6f5e; --accent-soft:#e3efe9; --el:#d98e04; --el-soft:#fdf1d8;
+  --water:#2b74b8; --water-soft:#e2eef9; --rent:#7a4fa3; --rent-soft:#efe6f7;
+  --ok:#2e8b57; --ok-soft:#e1f3e8; --bad:#c0392b; --bad-soft:#fbe5e2;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif}
+header{background:var(--accent);color:#fff;padding:18px 24px 0}
+header h1{margin:0 0 4px;font-size:22px;font-weight:600}
+header p{margin:0 0 14px;opacity:.8;font-size:13px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:transparent;border:0;color:#fff;opacity:.75;padding:10px 16px;font:inherit;font-weight:500;cursor:pointer;border-radius:8px 8px 0 0}
+nav button.active{background:var(--bg);color:var(--ink);opacity:1}
+nav button:hover{opacity:1}
+main{max-width:1200px;margin:0 auto;padding:22px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
+.card h2{margin:0 0 12px;font-size:17px}
+.card h3{margin:0 0 10px;font-size:15px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted);font-size:13px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+input,select,textarea{font:inherit;color:var(--ink);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.btn{font:inherit;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;background:var(--accent);color:#fff;font-weight:600}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid #e9b8b1}
+.flat-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px}
+.flat-head h3{margin:0;font-size:18px}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.kpi{border-radius:10px;padding:10px 12px}
+.kpi .t{font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;opacity:.8}
+.kpi .v{font-size:20px;font-weight:700;margin-top:2px}
+.kpi .s{font-size:12px;opacity:.85}
+.kpi.el{background:var(--el-soft);color:#7a5000}
+.kpi.wa{background:var(--water-soft);color:#174a78}
+.balance{border-radius:10px;padding:10px 12px;font-weight:600;display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.balance.ok{background:var(--ok-soft);color:var(--ok)}
+.balance.bad{background:var(--bad-soft);color:var(--bad)}
+.balance .v{font-size:18px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:8px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:hover td{background:#faf7f0}
+.scroll{overflow-x:auto}
+.chip{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 7px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid transparent;user-select:none;margin:1px}
+.chip.on{background:var(--ok-soft);color:var(--ok);border-color:#b7dfc6}
+.chip.off{background:#f1eee7;color:#a49d90;border-color:var(--line)}
+.chip.off.due{background:var(--bad-soft);color:var(--bad);border-color:#efc3bc}
+.matrix td{text-align:center}
+.matrix td:first-child{text-align:left;font-weight:600;white-space:nowrap}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:10px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+.hidden{display:none}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}
+.checkline{display:flex;align-items:center;gap:8px;text-transform:none;font-size:14px;color:var(--ink);font-weight:500;letter-spacing:0;flex-direction:row}
+.checkline input{width:18px;height:18px}
+.pay-box{border:1px dashed var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.pay-box input[type=number]{width:100%}
+.cloud{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:999px;background:rgba(255,255,255,.18);font-weight:600;opacity:1}
+.cloud.ok{background:#d6f0e0;color:#1d6b43}.cloud.err{background:#fbe5e2;color:#a5281b}.cloud.busy{background:#fdf1d8;color:#7a5000}
+@media print{header nav,.no-print,.btn{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏠 Evidence pronajímaných bytů</h1>
+  <p>Stavy měřidel, platby nájemného a záloh, předběžné vyúčtování. <span id="cloud" class="cloud">💻 Jen v tomto prohlížeči</span></p>
+  <nav id="tabs"></nav>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== JSONBin – sem můžete klíč a ID binu vložit napevno (pak fungují na všech zařízeních bez zadávání) ===== */
+const JSONBIN_DEFAULT={
+  key:'$2a$10$u6/ZOk/sE1tE96arVSg97.SOzYfhoCnboHCKJjgacDUCLVltlD0zy',            // váš X-Master-Key nebo X-Access-Key
+  keyType:'master',  // 'master' nebo 'access'
+  bin:'6ad745ddac6210605a41e037'             // ID binu – když je prázdné, aplikace si bin sama vytvoří (tlačítko v Nastavení)
+};
+/* ================================================================================================== */
+const KEY='evidence-bytu-v1', CLOUD_KEY='evidence-bytu-cloud';
+const MONTHS=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+const uid=()=>Math.random().toString(36).slice(2,10);
+const defaultState=()=>({
+  settings:{cenaKwh:6.5,stalyPlatEl:150,cenaVody:130},
+  byty:[1,2,3].map(i=>({id:'b'+i,nazev:'Byt '+i,najemnik:'',najem:12000,zalohaEl:1500,zalohaVoda:600})),
+  zaznamy:[]
+});
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||defaultState()}catch(e){S=defaultState()}
+let tab='prehled', year=new Date().getFullYear(), editId=null;
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}pushLater()}
+
+/* ---------- CLOUD (JSONBin) ---------- */
+let C;
+try{C=Object.assign({},JSONBIN_DEFAULT,JSON.parse(localStorage.getItem(CLOUD_KEY))||{})}catch(e){C={...JSONBIN_DEFAULT}}
+if(JSONBIN_DEFAULT.key&&!C.key)C.key=JSONBIN_DEFAULT.key;
+if(JSONBIN_DEFAULT.bin&&!C.bin)C.bin=JSONBIN_DEFAULT.bin;
+const API='https://api.jsonbin.io/v3/b';
+const cloudOn=()=>!!(C.key&&C.bin);
+function saveCloudCfg(){try{localStorage.setItem(CLOUD_KEY,JSON.stringify(C))}catch(e){}}
+function hdr(json){const h={'X-Bin-Meta':'false'};h[C.keyType==='access'?'X-Access-Key':'X-Master-Key']=C.key;if(json)h['Content-Type']='application/json';return h}
+function status(t,cls){const el=document.getElementById('cloud');if(el){el.textContent=t;el.className='cloud '+(cls||'')}}
+let pushT=null, dirty=false;
+function pushLater(){if(!cloudOn())return;dirty=true;status('☁️ Ukládám…','busy');clearTimeout(pushT);pushT=setTimeout(push,800)}
+async function push(){
+  if(!cloudOn())return;
+  try{const r=await fetch(API+'/'+C.bin,{method:'PUT',headers:hdr(true),body:JSON.stringify(S)});
+    if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,120));
+    dirty=false;status('☁️ Uloženo v cloudu','ok');
+  }catch(e){status('⚠️ Cloud: chyba ukládání','err');toast('Uložení do JSONBinu selhalo: '+e.message)}
+}
+async function pull(silent){
+  if(!cloudOn()){status('💻 Jen v tomto prohlížeči','');return}
+  status('☁️ Načítám…','busy');
+  try{const r=await fetch(API+'/'+C.bin+'/latest',{headers:hdr()});
+    if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,120));
+    const d=await r.json();
+    if(d&&d.byty&&d.zaznamy&&!(d.zaznamy.length===0&&S.zaznamy.length>0)){S=d;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}render();if(!silent)toast('Data načtena z cloudu ✓')}
+    else{await push()} // prázdný bin → nahrát současná data
+    status('☁️ Synchronizováno','ok');
+  }catch(e){status('⚠️ Cloud nedostupný','err');toast('Načtení z JSONBinu selhalo: '+e.message)}
+}
+async function createBin(){
+  if(!C.key){alert('Nejdřív vyplňte API klíč.');return}
+  try{const h=hdr(true);h['X-Bin-Name']='evidence-bytu';h['X-Bin-Private']='true';
+    const r=await fetch(API,{method:'POST',headers:h,body:JSON.stringify(S)});
+    const d=await r.json();if(!r.ok)throw new Error(d.message||r.status);
+    C.bin=d.metadata.id;saveCloudCfg();render();status('☁️ Uloženo v cloudu','ok');
+    toast('Bin vytvořen ✓');
+  }catch(e){alert('Vytvoření binu selhalo: '+e.message+(C.keyType==='access'?'\n(Access Key musí mít oprávnění Create.)':''))}
+}
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200)}
+const kc=n=>(Math.round(n)||0).toLocaleString('cs-CZ')+' Kč';
+const fmt=(n,d=0)=>(n==null||isNaN(n))?'–':Number(n).toLocaleString('cs-CZ',{maximumFractionDigits:d,minimumFractionDigits:0});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mLabel=m=>{const[y,mm]=m.split('-');return MONTHS[+mm-1]+' '+y};
+const byt=id=>S.byty.find(b=>b.id===id);
+
+// záznamy bytu seřazené podle měsíce, s dopočtenou spotřebou
+function rows(bytId){
+  const r=S.zaznamy.filter(z=>z.bytId===bytId).sort((a,b)=>a.mesic.localeCompare(b.mesic));
+  let prevEl=null,prevV=null;
+  return r.map(z=>{
+    const o={...z};
+    o.spEl=(z.el!=null&&prevEl!=null)?z.el-prevEl:null;
+    o.spV=(z.voda!=null&&prevV!=null)?z.voda-prevV:null;
+    if(z.el!=null)prevEl=z.el; if(z.voda!=null)prevV=z.voda;
+    o.nakEl=o.spEl!=null?o.spEl*S.settings.cenaKwh+(+S.settings.stalyPlatEl||0):null;
+    o.nakV=o.spV!=null?o.spV*S.settings.cenaVody:null;
+    return o;
+  });
+}
+function summary(bytId,y){
+  const r=rows(bytId).filter(z=>z.mesic.startsWith(y+'-'));
+  const s={spEl:0,spV:0,nakEl:0,nakV:0,zalEl:0,zalV:0,najem:0,mesicu:r.length,last:[...r].reverse().find(z=>z.el!=null||z.voda!=null)};
+  r.forEach(z=>{s.spEl+=z.spEl||0;s.spV+=z.spV||0;s.nakEl+=z.nakEl||0;s.nakV+=z.nakV||0;
+    s.zalEl+=+z.zalEl||0;s.zalV+=+z.zalV||0;s.najem+=+z.najem||0});
+  s.bilEl=s.zalEl-s.nakEl; s.bilV=s.zalV-s.nakV; s.bil=s.bilEl+s.bilV;
+  return s;
+}
+
+function renderTabs(){
+  const t=[['prehled','📊 Přehled'],...S.byty.map(b=>[b.id,'🚪 '+b.nazev]),['nastaveni','⚙️ Nastavení']];
+  document.getElementById('tabs').innerHTML=t.map(([id,l])=>`<button class="${tab===id?'active':''}" onclick="go('${id}')">${esc(l)}</button>`).join('');
+}
+function go(t){tab=t;editId=null;render()}
+function yearSelect(){
+  const ys=new Set([new Date().getFullYear(),year]);S.zaznamy.forEach(z=>ys.add(+z.mesic.slice(0,4)));
+  return `<label style="flex-direction:row;align-items:center;gap:8px">Rok <select onchange="year=+this.value;render()">${[...ys].sort().map(y=>`<option ${y===year?'selected':''}>${y}</option>`).join('')}</select></label>`;
+}
+
+function render(){
+  renderTabs();
+  const app=document.getElementById('app');
+  if(tab==='prehled')app.innerHTML=prehled();
+  else if(tab==='nastaveni')app.innerHTML=nastaveni();
+  else app.innerHTML=detail(byt(tab));
+}
+
+/* ---------- PŘEHLED ---------- */
+function prehled(){
+  let h=`<div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">Přehled za rok ${year}</h2><div class="row">${yearSelect()}<button class="btn ghost small no-print" onclick="window.print()">🖨️ Tisk</button></div></div><div class="grid3">`;
+  S.byty.forEach(b=>{
+    const s=summary(b.id,year);
+    const ok=s.bil>=0;
+    h+=`<div class="card">
+      <div class="flat-head"><div><h3>${esc(b.nazev)}</h3><div class="muted">${esc(b.najemnik)||'<i>nájemník nezadán</i>'}</div></div>
+      <span class="badge" style="background:var(--rent-soft);color:var(--rent)">nájem ${kc(b.najem)}</span></div>
+      <div class="muted">Poslední odečet: ${s.last?`<b>${mLabel(s.last.mesic)}</b> · ⚡ ${fmt(s.last.el,1)} kWh · 💧 ${fmt(s.last.voda,2)} m³`:'zatím žádný'}</div>
+      <div class="kpis">
+        <div class="kpi el"><div class="t">⚡ Elektřina</div><div class="v">${fmt(s.spEl,1)} kWh</div><div class="s">náklad ${kc(s.nakEl)}<br>zálohy ${kc(s.zalEl)}</div></div>
+        <div class="kpi wa"><div class="t">💧 Voda</div><div class="v">${fmt(s.spV,2)} m³</div><div class="s">náklad ${kc(s.nakV)}<br>zálohy ${kc(s.zalV)}</div></div>
+      </div>
+      <div class="balance ${ok?'ok':'bad'}"><span>${ok?'Předběžný přeplatek':'Předběžný nedoplatek'}</span><span class="v">${kc(Math.abs(s.bil))}</span></div>
+      <div class="muted" style="margin-top:8px">Zaplacené nájemné v roce: <b>${kc(s.najem)}</b> · záznamů: ${s.mesicu}</div>
+      <div style="margin-top:12px" class="no-print"><button class="btn small" onclick="go('${b.id}')">Otevřít byt →</button></div>
+    </div>`;
+  });
+  h+=`</div>`;
+  // matice plateb
+  const now=new Date(), curKey=now.getFullYear()*12+now.getMonth();
+  h+=`<div class="card"><h2>Platby po měsících – ${year}</h2><p class="muted" style="margin-top:-6px">Kliknutím na štítek označíte platbu jako zaplacenou / nezaplacenou (použije se výchozí částka bytu).</p><div class="scroll"><table class="matrix"><thead><tr><th>Měsíc</th>${S.byty.map(b=>`<th style="text-align:center">${esc(b.nazev)}</th>`).join('')}</tr></thead><tbody>`;
+  for(let m=1;m<=12;m++){
+    const key=`${year}-${String(m).padStart(2,'0')}`, due=(year*12+m-1)<=curKey;
+    h+=`<tr><td>${MONTHS[m-1]}</td>`;
+    S.byty.forEach(b=>{
+      const z=S.zaznamy.find(z=>z.bytId===b.id&&z.mesic===key)||{};
+      const c=(f,l,t)=>`<span class="chip ${+z[f]>0?'on':'off'} ${due?'due':''}" title="${t}${+z[f]>0?': '+kc(z[f]):' – nezaplaceno'}" onclick="toggle('${b.id}','${key}','${f}')">${l}</span>`;
+      h+=`<td>${c('najem','N','Nájem')}${c('zalEl','E','Záloha elektřina')}${c('zalV','V','Záloha voda')}</td>`;
+    });
+    h+=`</tr>`;
+  }
+  h+=`</tbody></table></div><div class="legend"><span><span class="dot" style="background:var(--ok)"></span>zaplaceno</span><span><span class="dot" style="background:var(--bad)"></span>nezaplaceno (měsíc už nastal)</span><span><span class="dot" style="background:#cfc8ba"></span>budoucí měsíc</span><span><b>N</b> nájem · <b>E</b> záloha elektřina · <b>V</b> záloha voda</span></div></div>`;
+  return h;
+}
+function toggle(bytId,mesic,f){
+  let z=S.zaznamy.find(z=>z.bytId===bytId&&z.mesic===mesic);
+  if(!z){z={id:uid(),bytId,mesic,el:null,voda:null,najem:0,zalEl:0,zalV:0,pozn:''};S.zaznamy.push(z)}
+  const b=byt(bytId), def={najem:b.najem,zalEl:b.zalohaEl,zalV:b.zalohaVoda}[f];
+  z[f]=+z[f]>0?0:def;
+  save();render();
+}
+
+/* ---------- DETAIL BYTU ---------- */
+function detail(b){
+  const r=rows(b.id), s=summary(b.id,year);
+  const e=editId?S.zaznamy.find(z=>z.id===editId):null;
+  const last=r[r.length-1];
+  let nextM;
+  if(e)nextM=e.mesic;else{const d=new Date();nextM=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+  const v=(k,d='')=>e?(e[k]??''):d;
+  const paid=(k)=>e?+e[k]>0:true;
+  let h=`<div class="card">
+    <div class="flat-head"><div><h2 style="margin:0">${esc(b.nazev)}</h2><div class="muted">${esc(b.najemnik)||'nájemník nezadán'} · nájem ${kc(b.najem)} · záloha el. ${kc(b.zalohaEl)} · záloha voda ${kc(b.zalohaVoda)}</div></div>
+    <button class="btn ghost small no-print" onclick="go('nastaveni')">Upravit byt</button></div>
+  </div>
+  <div class="card no-print"><h2>${e?'✏️ Upravit záznam – '+mLabel(e.mesic):'➕ Nový měsíční záznam'}</h2>
+    <form class="form" onsubmit="saveRec(event,'${b.id}')">
+      <label>Měsíc<input type="month" name="mesic" value="${nextM}" required></label>
+      <label>⚡ Stav elektroměru (kWh)<input type="number" step="0.1" name="el" value="${v('el')}" placeholder="${last?'minule '+fmt(last.el,1):''}"></label>
+      <label>💧 Stav vodoměru (m³)<input type="number" step="0.001" name="voda" value="${v('voda')}" placeholder="${last?'minule '+fmt(last.voda,3):''}"></label>
+      <div class="pay-box"><label class="checkline"><input type="checkbox" name="najemOk" ${paid('najem')?'checked':''}> Nájem zaplacen</label><input type="number" name="najem" value="${e?(+e.najem||b.najem):b.najem}"></div>
+      <div class="pay-box"><label class="checkline"><input type="checkbox" name="zalElOk" ${paid('zalEl')?'checked':''}> Záloha elektřina</label><input type="number" name="zalEl" value="${e?(+e.zalEl||b.zalohaEl):b.zalohaEl}"></div>
+      <div class="pay-box"><label class="checkline"><input type="checkbox" name="zalVOk" ${paid('zalV')?'checked':''}> Záloha voda</label><input type="number" name="zalV" value="${e?(+e.zalV||b.zalohaVoda):b.zalohaVoda}"></div>
+      <label style="grid-column:1/-1">Poznámka<input name="pozn" value="${esc(v('pozn'))}" placeholder="např. zaplaceno pozdě, oprava…"></label>
+      <div class="row" style="grid-column:1/-1"><button class="btn">${e?'Uložit změny':'Přidat záznam'}</button>${e?`<button type="button" class="btn ghost" onclick="editId=null;render()">Zrušit</button>`:''}</div>
+    </form>
+  </div>
+  <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">Souhrn ${year}</h2>${yearSelect()}</div>
+    <div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+      <div class="kpi el"><div class="t">Spotřeba elektřiny</div><div class="v">${fmt(s.spEl,1)} kWh</div><div class="s">náklad ${kc(s.nakEl)} · zálohy ${kc(s.zalEl)}</div></div>
+      <div class="kpi wa"><div class="t">Spotřeba vody</div><div class="v">${fmt(s.spV,2)} m³</div><div class="s">náklad ${kc(s.nakV)} · zálohy ${kc(s.zalV)}</div></div>
+      <div class="kpi" style="background:var(--rent-soft);color:var(--rent)"><div class="t">Zaplacený nájem</div><div class="v">${kc(s.najem)}</div><div class="s">${r.filter(z=>z.mesic.startsWith(year+'-')&&+z.najem>0).length} měsíců</div></div>
+      <div class="kpi" style="background:${s.bil>=0?'var(--ok-soft)':'var(--bad-soft)'};color:${s.bil>=0?'var(--ok)':'var(--bad)'}"><div class="t">${s.bil>=0?'Přeplatek':'Nedoplatek'} (předběžně)</div><div class="v">${kc(Math.abs(s.bil))}</div><div class="s">el. ${kc(s.bilEl)} · voda ${kc(s.bilV)}</div></div>
+    </div>
+  </div>
+  <div class="card"><h2>Historie záznamů</h2>`;
+  if(!r.length)h+=`<div class="empty">Zatím žádné záznamy. První záznam slouží jako počáteční stav měřidel.</div>`;
+  else{
+    h+=`<div class="scroll"><table><thead><tr><th>Měsíc</th><th class="num">⚡ Stav</th><th class="num">Spotřeba</th><th class="num">Náklad el.</th><th class="num">💧 Stav</th><th class="num">Spotřeba</th><th class="num">Náklad voda</th><th style="text-align:center">Platby</th><th>Poznámka</th><th class="no-print"></th></tr></thead><tbody>`;
+    [...r].reverse().forEach(z=>{
+      const c=(f,l)=>`<span class="chip ${+z[f]>0?'on':'off due'}" title="${+z[f]>0?kc(z[f]):'nezaplaceno'}">${l}</span>`;
+      h+=`<tr><td><b>${mLabel(z.mesic)}</b></td>
+        <td class="num">${fmt(z.el,1)}</td><td class="num">${z.spEl!=null?fmt(z.spEl,1)+' kWh':'<span class="muted">počátek</span>'}</td><td class="num">${z.nakEl!=null?kc(z.nakEl):'–'}</td>
+        <td class="num">${fmt(z.voda,3)}</td><td class="num">${z.spV!=null?fmt(z.spV,3)+' m³':'<span class="muted">počátek</span>'}</td><td class="num">${z.nakV!=null?kc(z.nakV):'–'}</td>
+        <td style="text-align:center;white-space:nowrap">${c('najem','N')}${c('zalEl','E')}${c('zalV','V')}</td>
+        <td class="muted">${esc(z.pozn)}</td>
+        <td class="no-print" style="white-space:nowrap"><button class="btn ghost small" onclick="editId='${z.id}';render();scrollTo(0,0)">Upravit</button> <button class="btn danger small" onclick="delRec('${z.id}')">✕</button></td></tr>`;
+    });
+    h+=`</tbody></table></div><p class="muted">Spotřeba = rozdíl oproti předchozímu odečtu. Náklad elektřiny = spotřeba × ${fmt(S.settings.cenaKwh,2)} Kč/kWh + stálý plat ${kc(S.settings.stalyPlatEl)} za měsíc. Voda = spotřeba × ${fmt(S.settings.cenaVody,2)} Kč/m³.</p>`;
+  }
+  return h+`</div>`;
+}
+function saveRec(ev,bytId){
+  ev.preventDefault();
+  const f=new FormData(ev.target), num=k=>f.get(k)===''?null:+f.get(k);
+  const mesic=f.get('mesic');
+  const data={bytId,mesic,el:num('el'),voda:num('voda'),
+    najem:f.get('najemOk')?num('najem')||0:0, zalEl:f.get('zalElOk')?num('zalEl')||0:0, zalV:f.get('zalVOk')?num('zalV')||0:0,
+    pozn:f.get('pozn')};
+  let z=editId?S.zaznamy.find(z=>z.id===editId):S.zaznamy.find(z=>z.bytId===bytId&&z.mesic===mesic);
+  if(!editId&&z&&!confirm(`Záznam pro ${mLabel(mesic)} už existuje. Přepsat?`))return;
+  if(z)Object.assign(z,data);else S.zaznamy.push({id:uid(),...data});
+  editId=null;year=+mesic.slice(0,4);save();render();toast('Uloženo ✓');
+}
+function delRec(id){if(confirm('Opravdu smazat tento záznam?')){S.zaznamy=S.zaznamy.filter(z=>z.id!==id);save();render();toast('Smazáno')}}
+
+/* ---------- NASTAVENÍ ---------- */
+function nastaveni(){
+  const st=S.settings;
+  let h=`<div class="card"><h2>💰 Ceny energií</h2><div class="form">
+    <label>Cena elektřiny (Kč / kWh)<input type="number" step="0.01" value="${st.cenaKwh}" onchange="S.settings.cenaKwh=+this.value;save();toast('Uloženo')"></label>
+    <label>Stálý plat elektřina (Kč / měsíc)<input type="number" step="1" value="${st.stalyPlatEl}" onchange="S.settings.stalyPlatEl=+this.value;save();toast('Uloženo')"></label>
+    <label>Vodné + stočné (Kč / m³)<input type="number" step="0.01" value="${st.cenaVody}" onchange="S.settings.cenaVody=+this.value;save();toast('Uloženo')"></label>
+  </div><p class="muted">Ceny včetně DPH. Stálý plat se připočítá za každý měsíc s naměřenou spotřebou (zadejte 0, pokud ho nechcete rozpočítávat).</p></div>
+  <div class="card"><h2>🚪 Byty a nájemníci</h2><div class="grid3">`;
+  S.byty.forEach((b,i)=>{
+    const inp=(k,l,t='text')=>`<label>${l}<input type="${t}" value="${esc(b[k])}" onchange="S.byty[${i}].${k}=${t==='number'?'+this.value':'this.value'};save();renderTabs();toast('Uloženo')"></label>`;
+    h+=`<div class="card" style="margin:0;box-shadow:none"><div class="form" style="grid-template-columns:1fr">
+      ${inp('nazev','Název bytu')}${inp('najemnik','Nájemník')}${inp('najem','Měsíční nájem (Kč)','number')}${inp('zalohaEl','Záloha elektřina (Kč/měs.)','number')}${inp('zalohaVoda','Záloha voda (Kč/měs.)','number')}
+    </div></div>`;
+  });
+  h+=`</div></div>
+  <div class="card"><h2>☁️ Ukládání do cloudu (JSONBin)</h2>
+    <p class="muted" style="margin-top:-6px">Po vyplnění se data při každé změně uloží do JSONBinu a při otevření stránky se odtud načtou – na jakémkoli zařízení se stejným klíčem a ID binu.</p>
+    <div class="form">
+      <label style="grid-column:span 2">API klíč<input id="ck" type="password" value="${esc(C.key)}" placeholder="$2a$10$…"></label>
+      <label>Typ klíče<select id="ct"><option value="master" ${C.keyType!=='access'?'selected':''}>Master Key</option><option value="access" ${C.keyType==='access'?'selected':''}>Access Key</option></select></label>
+      <label style="grid-column:span 2">ID binu<input id="cb" value="${esc(C.bin)}" placeholder="prázdné = vytvořit nový"></label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="C.key=ck.value.trim();C.keyType=ct.value;C.bin=cb.value.trim();saveCloudCfg();pull()">Uložit a připojit</button>
+      <button class="btn ghost" onclick="C.key=ck.value.trim();C.keyType=ct.value;saveCloudCfg();createBin()">Vytvořit nový bin</button>
+      <button class="btn ghost" onclick="pull()">↻ Načíst z cloudu</button>
+      ${C.key||C.bin?`<button class="btn danger" onclick="if(confirm('Odpojit cloud na tomto zařízení? Data v JSONBinu zůstanou.')){C={key:'',keyType:'master',bin:''};saveCloudCfg();render();status('💻 Jen v tomto prohlížeči','')}">Odpojit</button>`:''}
+    </div>
+    ${C.bin?`<p class="muted">Připojený bin: <b>${esc(C.bin)}</b> – toto ID si poznamenejte, zadáte ho na dalších zařízeních.</p>`:''}
+  </div>
+  <div class="card"><h2>💾 Záloha dat</h2><p class="muted" style="margin-top:-6px">Data jsou uložena jen v tomto prohlížeči na tomto počítači. Exportem si stáhnete soubor, který můžete uložit (např. do D:\\AGENT) a později načíst zpět.</p>
+    <div class="row"><button class="btn" onclick="exportData()">⬇️ Exportovat data (.json)</button>
+    <label class="btn ghost" style="flex-direction:row;text-transform:none;letter-spacing:0;font-size:15px">⬆️ Načíst ze zálohy<input type="file" accept=".json" class="hidden" onchange="importData(this)"></label>
+    <button class="btn danger" onclick="if(confirm('Smazat VŠECHNA data? Nejdřív si udělejte export!')){S=defaultState();save();render()}">Smazat vše</button></div>
+  </div>`;
+  return h;
+}
+function exportData(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));
+  a.download='evidence-bytu-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function importData(inp){
+  const f=inp.files[0];if(!f)return;
+  f.text().then(t=>{try{const d=JSON.parse(t);if(!d.byty||!d.zaznamy)throw 0;if(confirm('Nahradit současná data daty ze zálohy?')){S=d;save();render();toast('Data načtena ✓')}}catch(e){alert('Soubor není platná záloha.')}});
+}
+render();
+pull(true);
+</script>
+</body>
+</html>
